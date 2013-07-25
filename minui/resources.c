@@ -41,22 +41,41 @@ double pow(double x, double y) {
     return x;
 }
 
-int res_create_surface(const char* name, gr_surface* pSurface, int sd, const char* theme_name) {
-    char resPath[256];
+/* Devices such as the Viper and Mako use recovery resources for compiling
+ * the charger images (frankly all I can say is why) to that end we need a
+ * hack to allow this, after several attempts I've determined creating the
+ * recovery resources from a separate function is the simplest solution.
+ */
+int res_create_recovery_surface(const char* name, gr_surface* pSurface, int sd, const char* theme_name) {
+	int ret = 0;
+	char resPath[PATH_MAX];
+	*pSurface = NULL;
+    if (sd == 1) {
+		sprintf(resPath, "/sdcard/cotrecovery/theme/%s/%s.png", theme_name, name);
+	} else {
+		sprintf(resPath, "/res/theme/%s/%s.png", theme_name, name);
+	}
+	ret = res_create_surface_final(resPath, pSurface);
+	return ret;
+}
+// non-recovery specific images (again, WHY?!?)
+int res_create_surface(const char* name, gr_surface* pSurface) {
+	int ret = 0;
+	char resPath[PATH_MAX];
+	*pSurface = NULL;
+	sprintf(resPath, "/res/images/%s.png", name);
+	ret = res_create_surface_final(resPath, pSurface);
+	return ret;
+}
+// create our image now that we've fixed the correct path
+int res_create_surface_final(const char* resPath, gr_surface* pSurface) {
     GGLSurface* surface = NULL;
     int result = 0;
     unsigned char header[8];
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
 
-    if (sd == 1) {
-		printf("Load from sdcard: /sdcard/cotrecovery/theme/%/%s.png\n", theme_name, name);
-		snprintf(resPath, sizeof(resPath)-1, "/sdcard/cotrecovery/theme/%s/%s.png", theme_name, name);
-	} else {
-		printf("Load from internal: /res/theme/%s/%s.png\n", theme_name, name);
-		snprintf(resPath, sizeof(resPath)-1, "/res/theme/%s/%s.png", theme_name, name);
-	}
-    resPath[sizeof(resPath)-1] = '\0';
+    //resPath[sizeof(resPath)-1] = '\0';
     FILE* fp = fopen(resPath, "rb");
     if (fp == NULL) {
         result = -1;

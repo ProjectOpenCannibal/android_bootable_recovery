@@ -715,7 +715,7 @@ void ui_init_icons()
 	switch(is_sd_theme) {
 		case 0:
 			for (i = 0; BITMAPS[i].name != NULL; ++i) {
-        		int result = res_create_surface(BITMAPS[i].name, BITMAPS[i].surface, 0, themename);
+        		int result = res_create_recovery_surface(BITMAPS[i].name, BITMAPS[i].surface, 0, themename);
         			if (result < 0) {
             			if (result == -2) {
                 			LOGI("Bitmap %s missing header\n", BITMAPS[i].name);
@@ -728,7 +728,7 @@ void ui_init_icons()
 			break;
 		case 1:
 			for (i = 0; BITMAPS[i].name != NULL; ++i) {
-				int result = res_create_surface(BITMAPS[i].name, BITMAPS[i].surface, 1, themename);
+				int result = res_create_recovery_surface(BITMAPS[i].name, BITMAPS[i].surface, 1, themename);
 					if (result < 0) {
 						if (result == -2) {
 							LOGI("Bitmap %s missing header\n", BITMAPS[i].name);
@@ -741,7 +741,7 @@ void ui_init_icons()
 			break;
 		default:
 			for (i = 0; BITMAPS[i].name != NULL; ++i) {
-        		int result = res_create_surface(BITMAPS[i].name, BITMAPS[i].surface, 0, "hydro");
+        		int result = res_create_recovery_surface(BITMAPS[i].name, BITMAPS[i].surface, 0, "hydro");
         			if (result < 0) {
             			if (result == -2) {
                 			LOGI("Bitmap %s missing header\n", BITMAPS[i].name);
