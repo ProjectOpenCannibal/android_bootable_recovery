@@ -1,4 +1,51 @@
-<html><body><h1>It works!</h1>
-<p>This is the default web page for this server.</p>
-<p>The web server software is running but no content has been added, yet.</p>
-</body></html>
+@Code
+    Layout = "~/_SiteLayout.vbhtml"
+    PageData("Title") = "Home Page"
+End Code
+
+@Section featured
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>
+                    Welcome to GitManagement, Ltd.</h1>
+            </hgroup>
+            <p>
+                The site features <mark>WebHosting, Android Developer File Hosting, and Git Hosting </mark> to help you get your development project started.
+                Our pricing plans are available when you login to My Account, or by visiting
+                <a href="http://plans.gitmanagement.tk" title="GitManagement Pricing Plans">our pricing guide</a>.
+            </p>
+        </div>
+    </section>
+End Section
+
+<h3>We suggest the following:</h3>
+
+<ol class="round">
+    <li class="one">
+        <h5>Getting Started</h5>
+        Getting your website up can be a tricky business. Let us help. For an addition fee of US $29.99, we can get your website up and running, using any programming
+        language of your choice.
+        <a href="https://wiki.gitmanagement.tk/wiki/ADDON_FEATURES">Learn more…</a>
+    </li>
+
+    <li class="two">
+        <h5>Making your Site Public</h5>
+        DNS Servers are a tricky business. Here at GitManagement, we handle everything related to customers domain's DNS records for FREE. Yes, for free, with the
+        reliability of Windows DNS Server 2012, you won't have to worry about being outdated. We will handle everything from pointing an A record, to getting your mail
+        server up and running. For more info
+        <a href="https://wiki.gitmanagement.tk/wiki/DNS_SERVICE">Learn more…</a>
+    </li>
+
+    <li class="three">
+        <h5>Getting Your Mail Server Running</h5>
+        It's not recommended to use an external mail server such as Google Apps or Windows Live Domains for your business mail. You need a high-quality, low maintenance mail
+        server that you won't have to worry about crashing, or stalling your mail flow. Here at GitManagement, we will provide your users with access to MDaemon, a high quality
+        mail server, best suited for production use for just US $4.95 more each month.
+
+        With our mail servers having 100% uptime, and our web servers having a 84.6% uptime rate, we ARE the true meaning of consistent servers. 
+        We never will have downtime without providing subscribers with a thirty-day advance notice, and if we have an unexpected interruption in service, we will reimburse subscribers
+        for the downtime they experienced either by an account credit, or a service upgrade. Click here to
+        <a href="https://wiki.gitmanagement.tk/wiki/MAIL_SERVER">Learn more…</a>
+    </li>
+</ol>
