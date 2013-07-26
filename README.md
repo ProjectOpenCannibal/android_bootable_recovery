@@ -21,3 +21,7 @@
 <li>Otherwise consider checking out a specific tag (not the ones labeled landscape).</li>
 <li>The following repos are required for all current builds: https://github.com/ProjectOpenCannibal/android_bootable_recovery_res and https://github.com/ProjectOpenCannibal/android_bootable_recovery_gui/tree/gingerbread.</li>
 </ul>
+
+<ul>
+<li>You may checkout all the required resources as well as the most recent stable tag by using one of the included local_manifests here: https://github.com/ProjectOpenCannibal/cotr-local_manifests</li>
+</ul>
