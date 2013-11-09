@@ -341,7 +341,6 @@ void draw_screen_locked(void)
 	        	gr_color(0, 0, 0, 160);
         		gr_fill(0, 0, gr_fb_width(), gr_fb_height());
 
-        		int total_rows = gr_fb_height() / CHAR_HEIGHT;
         		int i = 0;
         		int j = 0;
         		int row = 0;            // current row that we are drawing on
