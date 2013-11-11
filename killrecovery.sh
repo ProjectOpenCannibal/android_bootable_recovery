@@ -13,6 +13,12 @@ then
     /sbin/recovery &
 fi
 
+# LG Viper
+if [ -f /init.cayman_sprint_us.rc ]
+then
+    /sbin/recovery &
+fi
+
 # Droid X
 if [ -f /init.mapphone_cdma.rc ]
 then
