@@ -73,12 +73,12 @@ static const struct option OPTIONS[] = {
 static const char *COMMAND_FILE = "/cache/recovery/command";
 static const char *INTENT_FILE = "/cache/recovery/intent";
 static const char *LOG_FILE = "/cache/recovery/log";
-static const char *LAST_LOG_FILE = "/sdcard/cotrecovery/recovery_log";
+static const char *LAST_LOG_FILE = "/sdcard/0/cotrecovery/recovery_log";
 static const char *CACHE_ROOT = "/cache";
-static const char *SDCARD_ROOT = "/sdcard";
+static const char *SDCARD_ROOT = "/sdcard/0";
 static int allow_display_toggle = 0;
 static int poweroff = 0;
-static const char *SDCARD_PACKAGE_FILE = "/sdcard/update.zip";
+static const char *SDCARD_PACKAGE_FILE = "/sdcard/0/update.zip";
 static const char *TEMPORARY_LOG_FILE = "/tmp/recovery.log";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
 
@@ -88,7 +88,7 @@ extern UIParameters ui_parameters;    // from ui.c
  * well as the suffix for backup or blobs */
 const char *DEFAULT_BACKUP_PATH = "cotrecovery";
 // We should make this check the other_sd as well...
-const char *USER_DEFINED_BACKUP_MARKER = "/sdcard/cotrecovery/.userdefinedbackups";
+const char *USER_DEFINED_BACKUP_MARKER = "/sdcard/0/cotrecovery/.userdefinedbackups";
 
 int OTHER_SD_CARD = NULL;
 
@@ -831,7 +831,7 @@ int run_script_file(void) {
 				char full_path[SCRIPT_COMMAND_SIZE];
 				if (value[0] != '/') {
 					// Relative path given
-					sprintf(full_path, "%s/%s", "/sdcard", value);
+					sprintf(full_path, "%s/%s", "/sdcard/0", value);
 					ensure_path_mounted(full_path);
 					ui_print("Installing zip file '%s'\n", full_path);
 					ret_val = install_zip(full_path);
