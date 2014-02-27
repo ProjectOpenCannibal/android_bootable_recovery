@@ -63,7 +63,7 @@
 #include "iniparse/ini.h"
 #include "nandroid.h"
 
-COTSETTINGS = "/sdcard/cotrecovery/settings.ini";
+COTSETTINGS = "/sdcard/0/cotrecovery/settings.ini";
 int fallback_settings = 0;
 
 int backupprompt = 0;
@@ -230,9 +230,9 @@ void parse_settings() {
 	if(OTHER_SD_CARD && OTHER_SD_CARD == EMMC) {
 		if(ensure_path_mounted("/sdcard") != 0) {
 			ensure_path_mounted("/emmc");
-			COTSETTINGS = "/emmc/cotrecovery/settings.ini";
+			COTSETTINGS = "/emmc/0/cotrecovery/settings.ini";
 		} else if(ini_parse(COTSETTINGS, settings_handler, &config) < 0)
-			COTSETTINGS = "/emmc/cotrecovery/settings.ini";
+			COTSETTINGS = "/emmc/0/cotrecovery/settings.ini";
 	} else if(ensure_path_mounted("/sdcard") != 0) {
 		load_fallback_settings();
 		parse_language();
@@ -276,7 +276,7 @@ void handle_theme(char * theme_name) {
 			theme_end = "/theme.ini";
 			break;
 		case 1:
-			theme_base = "/sdcard/cotrecovery/theme/";
+			theme_base = "/sdcard/0/cotrecovery/theme/";
 			theme_end = "/theme.ini";
 			break;
 		default:
