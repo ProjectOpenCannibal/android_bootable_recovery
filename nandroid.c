@@ -53,21 +53,96 @@ void nandroid_get_root_backup_path(const char* backup_path, int other_sd)
 	if (other_sd) {
 		switch(OTHER_SD_CARD) {
 			case EMMC: 
-				strcpy(backup_path, "/emmc");
+				strcpy(backup_path, "/emmc/0");
 				break;
 			case EXTERNALSD:
 				strcpy(backup_path, "/external_sd");
 				break;
 		}
 	} else {
-		strcpy(backup_path, "/sdcard");
+		strcpy(backup_path, "/sdcard/0");
 	}
 }
 
 /* After getting the root path of "/sdcard" or similar we need to add
  * a storage folder; default of course will be cotrecovery but this is
  * where the user_defined backup options come into play.
- * possible return would be "/sdcard/cotrecovery" */
+ * possible return would be "/sdcard/cotreco - 1] = NULL;
+    tmp[ui_get_text_cols() - 1] = '\0';
+    nandroid_files_count++;
+    ui_increment_frame();
+    ui_nice_print("%s\n", tmp);
+    if (!ui_was_niced() && nandroid_files_total != 0)
+        ui_set_progress((float)nandroid_files_count / (float)nandroid_files_total);
+    if (!ui_was_niced())
+        ui_delete_line();
+}
+
+static void compute_directory_stats(const char* directory)
+{
+    char tmp[PATH_MAX];
+    sprintf(tmp, "find %s | %s wc -l > /tmp/dircount", directory, strcmp(directory, "/data") == 0 && is_data_media() ? "grep -v /data/media |" : "");
+    __system(tmp);
+    char count_text[100];
+    FILE* f = fopen("/tmp/dircount", "r");
+    fread(count_text, 1, sizeof(count_text), f);
+    fclose(f);
+    nandroid_files_count = 0;
+    nandroid_files_total = atoi(count_text);
+    ui_reset_progress();
+    ui_show_progress(1, 0);
+}
+
+typedef void (*file_event_callback)(const char* filename);
+
+static int mkyaffs2image_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
+    char tmp[PATH_MAX];
+    sprintf(tmp, "cd %s ; mkyaffs2image . %s.img ; exit $?", backup_path, backup_file_image);
+
+    FILE *fp = __popen(tmp, "r");
+    if (fp == NULL) {
+        ui_print("Unable to execute mkyaffs2image.\n");
+        return -1;
+    }
+
+    while (fgets(tmp, PATH_MAX, fp) != NULL) {
+        tmp[PATH_MAX - 1] = NULL;
+        if (callback)
+            nandroid_callback(tmp);
+    }
+
+    return __pclose(fp);
+}
+
+static int tar_compress_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
+    char tmp[PATH_MAX];
+    sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv --exclude=data/data/com.google.android.music/files/* %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
+
+    FILE *fp = __popen(tmp, "r");
+    if (fp == NULL) {
+        ui_print("Unable to execute tar.\n");
+        return -1;
+    }
+
+    while (fgets(tmp, PATH_MAX, fp) != NULL) {
+        tmp[PATH_MAX - 1] = NULL;
+        if (callback)
+            nandroid_callback(tmp);
+    }
+
+    return __pclose(fp);
+}
+
+void nandroid_dedupe_gc(const char* blob_dir) {
+    char backup_dir[PATH_MAX];
+    strcpy(backup_dir, blob_dir);
+    char *d = dirname(backup_dir);
+    strcpy(backup_dir, d);
+    strcat(backup_dir, "/backup");
+    ui_print("Freeing space...\n");
+    char tmp[PATH_MAX];
+    sprintf(tmp, "dedupe gc %s $(find %s -name '*.dup')", blob_dir, backup_dir);
+    __system(tmp);very" */
 void nandroid_get_assigned_backup_path(const char* backup_path, int other_sd)
 {
     char root_path[PATH_MAX];
@@ -143,82 +218,7 @@ static void nandroid_callback(const char* filename)
     char tmp[PATH_MAX];
     strcpy(tmp, justfile);
     if (tmp[strlen(tmp) - 1] == '\n')
-        tmp[strlen(tmp) - 1] = NULL;
-    tmp[ui_get_text_cols() - 1] = '\0';
-    nandroid_files_count++;
-    ui_increment_frame();
-    ui_nice_print("%s\n", tmp);
-    if (!ui_was_niced() && nandroid_files_total != 0)
-        ui_set_progress((float)nandroid_files_count / (float)nandroid_files_total);
-    if (!ui_was_niced())
-        ui_delete_line();
-}
-
-static void compute_directory_stats(const char* directory)
-{
-    char tmp[PATH_MAX];
-    sprintf(tmp, "find %s | %s wc -l > /tmp/dircount", directory, strcmp(directory, "/data") == 0 && is_data_media() ? "grep -v /data/media |" : "");
-    __system(tmp);
-    char count_text[100];
-    FILE* f = fopen("/tmp/dircount", "r");
-    fread(count_text, 1, sizeof(count_text), f);
-    fclose(f);
-    nandroid_files_count = 0;
-    nandroid_files_total = atoi(count_text);
-    ui_reset_progress();
-    ui_show_progress(1, 0);
-}
-
-typedef void (*file_event_callback)(const char* filename);
-
-static int mkyaffs2image_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
-    char tmp[PATH_MAX];
-    sprintf(tmp, "cd %s ; mkyaffs2image . %s.img ; exit $?", backup_path, backup_file_image);
-
-    FILE *fp = __popen(tmp, "r");
-    if (fp == NULL) {
-        ui_print("Unable to execute mkyaffs2image.\n");
-        return -1;
-    }
-
-    while (fgets(tmp, PATH_MAX, fp) != NULL) {
-        tmp[PATH_MAX - 1] = NULL;
-        if (callback)
-            nandroid_callback(tmp);
-    }
-
-    return __pclose(fp);
-}
-
-static int tar_compress_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
-    char tmp[PATH_MAX];
-    sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv --exclude=data/data/com.google.android.music/files/* %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
-
-    FILE *fp = __popen(tmp, "r");
-    if (fp == NULL) {
-        ui_print("Unable to execute tar.\n");
-        return -1;
-    }
-
-    while (fgets(tmp, PATH_MAX, fp) != NULL) {
-        tmp[PATH_MAX - 1] = NULL;
-        if (callback)
-            nandroid_callback(tmp);
-    }
-
-    return __pclose(fp);
-}
-
-void nandroid_dedupe_gc(const char* blob_dir) {
-    char backup_dir[PATH_MAX];
-    strcpy(backup_dir, blob_dir);
-    char *d = dirname(backup_dir);
-    strcpy(backup_dir, d);
-    strcat(backup_dir, "/backup");
-    ui_print("Freeing space...\n");
-    char tmp[PATH_MAX];
-    sprintf(tmp, "dedupe gc %s $(find %s -name '*.dup')", blob_dir, backup_dir);
-    __system(tmp);
+        tmp[strlen(tmp)
     ui_print("Done freeing space.\n");
 }
 
