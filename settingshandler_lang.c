@@ -1158,7 +1158,7 @@ void parse_language() {
 		char * lang_base;
 		char * lang_end;
 
-		lang_base = "/sdcard/cotrecovery/lang/lang_";
+		lang_base = "/sdcard/0/cotrecovery/lang/lang_";
 		lang_end = ".ini";
 		strcpy(full_lang_file, lang_base);
 		strcat(full_lang_file, language);
