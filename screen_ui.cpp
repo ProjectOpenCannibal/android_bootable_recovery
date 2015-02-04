@@ -34,6 +34,10 @@
 #include "screen_ui.h"
 #include "ui.h"
 
+#ifndef SEPARATOR_COLOR
+#define SEPARATOR_COLOR 160, 160, 160, 255
+#endif
+
 // There's only (at most) one of these objects, and global callbacks
 // (for pthread_create, and the input event system) need to find it,
 // so use a global variable.
@@ -240,6 +244,9 @@ void ScreenRecoveryUI::draw_menu_item(int textrow, const char *text, int selecte
         SetColor(MENU);
         gr_text(4, (textrow+1)*char_height-1, text, 0);
     }
+
+    gr_color(SEPARATOR_COLOR);
+    gr_fill(0, (textrow+3)*char_height-1, gr_fb_width(), (textrow+3)*char_height+1);
 }
 
 void ScreenRecoveryUI::draw_dialog()
