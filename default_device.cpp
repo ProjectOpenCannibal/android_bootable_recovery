@@ -27,14 +27,12 @@ static const char* HEADERS[] = { "Swipe up/down to change selections;",
                                  "",
                                  NULL };
 
-static const char* ITEMS[] =  {"Reboot system now",
-                               "Apply update",
-                               "Wipe data/factory reset",
-                               "Wipe cache partition",
-                               "Wipe media",
-                               "Reboot to bootloader",
-                               "Power down",
-                               "View recovery logs",
+static const char* ITEMS[] =  {"Reboot to Android",
+                               "Flash ZIP",
+                               "Factory Reset",
+                               "Clear Cache",
+                               "Erase Internal Storage",
+                               "Recovery Settings",
                                NULL };
 
 static Device::BuiltinAction ACTIONS[] = {
@@ -43,9 +41,7 @@ static Device::BuiltinAction ACTIONS[] = {
     Device::WIPE_DATA,
     Device::WIPE_CACHE,
     Device::WIPE_MEDIA,
-    Device::REBOOT_BOOTLOADER,
-    Device::SHUTDOWN,
-    Device::READ_RECOVERY_LASTLOG,
+    Device::RECOVERY_SETTINGS,
     Device::NO_ACTION
 };
 

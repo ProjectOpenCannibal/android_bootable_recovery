@@ -45,12 +45,16 @@
 #include "voldclient/voldclient.h"
 
 #include "adb_install.h"
+
+#include "cot/cot.h"
 extern "C" {
 #include "minadbd/adb.h"
 #include "fuse_sideload.h"
 #include "fuse_sdcard_provider.h"
 #include "recovery_cmds.h"
 }
+
+using namespace COT;
 
 struct selabel_handle *sehandle;
 
@@ -992,8 +996,6 @@ prompt_and_wait(Device* device, int status) {
                     break;
 
                 case Device::REBOOT:
-                case Device::SHUTDOWN:
-                case Device::REBOOT_BOOTLOADER:
                     return chosen_action;
 
                 case Device::WIPE_DATA:
@@ -1020,9 +1022,13 @@ prompt_and_wait(Device* device, int status) {
                     }
                     break;
 
-                case Device::READ_RECOVERY_LASTLOG:
-                    choose_recovery_file(device);
+                case Device::RECOVERY_SETTINGS:
+                    Settings::RecSettingsMenu();
                     break;
+
+                /*case Device::READ_RECOVERY_LASTLOG:
+                    choose_recovery_file(device);
+                    break;*/
             }
             if (status == Device::kRefresh) {
                 status = 0;
