@@ -35,7 +35,29 @@
 #include "cot.h"
 
 extern RecoveryUI* ui;
+using namespace COT;
 
 namespace COT {
+    int Reboot::RebootMenu(Device* device) {
+        static const char* RebootMenuHeaders[] = { "Reboot", "", NULL };
+        static const char* RebootMenuItems[] = { "Reboot to Android",
+            "Reboot Recovery",
+            "Reboot to Bootloader",
+            NULL
+        };
 
+        for (;;) {
+            int RebootSelection = get_menu_selection(RebootMenuHeaders, RebootMenuItems, 0, 0, device);
+            switch (RebootSelection) {
+                case REBOOTMENU_MAIN:
+                    return REBOOTMENU_MAIN;
+                case REBOOTMENU_RECOVERY:
+                    return REBOOTMENU_RECOVERY;
+                case REBOOTMENU_BOOTLOADER:
+                    return REBOOTMENU_BOOTLOADER;
+                case Device::kGoBack:
+                    return -1;
+            }
+        }
+    }
 }

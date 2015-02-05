@@ -69,7 +69,7 @@ class Device {
 
     enum BuiltinAction { NO_ACTION, REBOOT, APPLY_UPDATE,
                          WIPE_DATA, WIPE_CACHE, WIPE_MEDIA,
-                         RECOVERY_SETTINGS, SHUTDOWN, REBOOT_BOOTLOADER };
+                         RECOVERY_SETTINGS, SHUTDOWN, REBOOT_BOOTLOADER, REBOOT_RECOVERY };
 
     // Perform a recovery action selected from the menu.
     // 'menu_position' will be the item number of the selected menu

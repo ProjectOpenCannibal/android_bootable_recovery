@@ -12,13 +12,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+#include "external.h"
 
 #include <utils/String8.h>
 using namespace android;
+
+/*
+If you have any defines that you need to access elsewhere, here
+is a good place for them!
+ */
+#define REBOOTMENU_MAIN 0
+#define REBOOTMENU_RECOVERY 1
+#define REBOOTMENU_BOOTLOADER 2
 
 namespace COT {
     class Settings {
     public:
         static void RecSettingsMenu();
+    };
+
+    class Reboot {
+    public:
+        static int RebootMenu(Device* device);
     };
 }

@@ -1001,8 +1001,19 @@ prompt_and_wait(Device* device, int status) {
                 case Device::NO_ACTION:
                     break;
 
-                case Device::REBOOT:
-                    return chosen_action;
+                case Device::REBOOT: {
+                    int reboot_action = Reboot::RebootMenu(device);
+                    switch (reboot_action) {
+                        case REBOOTMENU_MAIN:
+                            return Device::REBOOT;
+                        case REBOOTMENU_RECOVERY:
+                            return Device::REBOOT_RECOVERY;
+                        case REBOOTMENU_BOOTLOADER:
+                            return Device::REBOOT_BOOTLOADER;
+                        default:
+                            break;
+                    }
+                }
 
                 case Device::WIPE_DATA:
                     wipe_data(ui->IsTextVisible(), device);
@@ -1392,6 +1403,11 @@ main(int argc, char **argv) {
         case Device::REBOOT_BOOTLOADER:
             ui->Print("Rebooting to bootloader...\n");
             property_set(ANDROID_RB_PROPERTY, "reboot,bootloader");
+            break;
+
+        case Device::REBOOT_RECOVERY:
+            ui->Print("Rebooting to recovery...\n");
+            property_set(ANDROID_RB_PROPERTY, "reboot,recovery");
             break;
 
         default:
