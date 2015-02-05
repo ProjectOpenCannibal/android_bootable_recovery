@@ -13,6 +13,9 @@
 * limitations under the License.
 */
 
+#include <utils/String8.h>
+using namespace android;
+
 namespace COT {
     class Settings {
     public:
