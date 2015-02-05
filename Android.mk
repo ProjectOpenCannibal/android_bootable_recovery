@@ -79,7 +79,11 @@ LOCAL_STATIC_LIBRARIES := \
     libsdcard \
     libminzip \
     libz \
+    libcrecovery \
+    libflashutils \
     libmtdutils \
+    libmmcutils \
+    libbmlutils \
     libmincrypt \
     libminadbd \
     libbusybox \
@@ -96,7 +100,6 @@ LOCAL_STATIC_LIBRARIES := \
     libc \
     libext2_blkid \
     libext2_uuid \
-    libcrecovery \
     libcot
 
 LOCAL_C_INCLUDES += \
@@ -313,11 +316,14 @@ LOCAL_C_INCLUDES += system/core/fs_mgr/include
 include $(BUILD_EXECUTABLE)
 
 
-include $(LOCAL_PATH)/libcrecovery/Android.mk \
+include $(LOCAL_PATH)/bmlutils/Android.mk \
+    $(LOCAL_PATH)/flashutils/Android.mk \
+    $(LOCAL_PATH)/libcrecovery/Android.mk \
     $(LOCAL_PATH)/minui/Android.mk \
     $(LOCAL_PATH)/minzip/Android.mk \
     $(LOCAL_PATH)/minadbd/Android.mk \
     $(LOCAL_PATH)/mtdutils/Android.mk \
+    $(LOCAL_PATH)/mmcutils/Android.mk \
     $(LOCAL_PATH)/tests/Android.mk \
     $(LOCAL_PATH)/tools/Android.mk \
     $(LOCAL_PATH)/edify/Android.mk \
