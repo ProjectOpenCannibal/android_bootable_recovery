@@ -87,6 +87,7 @@ LOCAL_STATIC_LIBRARIES := \
     libminui \
     libpng \
     libfs_mgr \
+    libutils \
     libcutils \
     liblog \
     libselinux \
@@ -97,6 +98,15 @@ LOCAL_STATIC_LIBRARIES := \
     libext2_uuid \
     libcrecovery \
     libcot
+
+LOCAL_C_INCLUDES += \
+    system/core/fs_mgr/include \
+    system/core/include \
+    system/core/libcutils \
+    external/libtar \
+    external/libtar/listhash \
+    external/zlib \
+    bionic/libc/bionic
 
 # OEMLOCK support requires a device specific liboemlock be supplied.
 # See comments in recovery.cpp for the API.
