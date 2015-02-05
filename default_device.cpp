@@ -83,6 +83,12 @@ class DefaultDevice : public Device {
               case KEY_SEARCH:
                 return kHighlightUp;
 
+              case KEY_J:
+                return kScrollDown;
+
+              case KEY_K:
+                return kScrollUp;
+
               case KEY_ENTER:
               case KEY_POWER:
               case BTN_MOUSE:

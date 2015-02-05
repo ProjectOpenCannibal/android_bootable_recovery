@@ -692,6 +692,31 @@ void ScreenRecoveryUI::StartMenu(const char* const * headers, const char* const 
     pthread_mutex_unlock(&updateMutex);
 }
 
+int ScreenRecoveryUI::ScrollMenu(int sel, int direction, bool abs) {
+#define SCROLL_DOWN 1
+#define SCROLL_UP 0
+    pthread_mutex_lock(&updateMutex);
+    if (abs) {
+        sel += menu_show_start;
+    }
+    if (show_menu > 0) {
+        if (direction == SCROLL_DOWN) {
+            if (menu_show_start > 0) {
+                menu_show_start = menu_show_start - 1;
+            }
+        }
+        if (direction == SCROLL_UP) {
+            int diff = menu_items - max_menu_rows;
+            if (menu_show_start < diff) {
+                menu_show_start = menu_show_start + 1;
+            }
+        }
+        update_screen_locked();
+    }
+    pthread_mutex_unlock(&updateMutex);
+    return sel;
+}
+
 int ScreenRecoveryUI::SelectMenu(int sel, bool abs) {
     int old_sel;
     pthread_mutex_lock(&updateMutex);

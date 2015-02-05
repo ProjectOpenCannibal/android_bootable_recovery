@@ -585,6 +585,12 @@ get_menu_selection(const char* const * headers, const char* const * items,
                     ++selected;
                     selected = ui->SelectMenu(selected);
                     break;
+                case Device::kScrollUp:
+                    selected = ui->ScrollMenu(selected, 0);
+                    break;
+                case Device::kScrollDown:
+                    selected = ui->ScrollMenu(selected, 1);
+                    break;
                 case Device::kInvokeItem:
                     chosen_item = selected;
                     break;
