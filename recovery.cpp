@@ -1013,6 +1013,7 @@ prompt_and_wait(Device* device, int status) {
                         default:
                             break;
                     }
+                    break;
                 }
 
                 case Device::WIPE_DATA:
