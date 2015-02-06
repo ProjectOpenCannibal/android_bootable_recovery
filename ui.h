@@ -96,6 +96,9 @@ class RecoveryUI {
 
     virtual ~RecoveryUI() { }
 
+    virtual void ResetIcons();
+    virtual void InitIcons();
+
     // Initialize the object; called before anything else.
     virtual void Init();
     // Show a stage indicator.  Call immediately after Init().

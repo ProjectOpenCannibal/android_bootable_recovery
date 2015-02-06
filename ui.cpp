@@ -244,6 +244,10 @@ RecoveryUI::RecoveryUI() :
     memset(key_pressed, 0, sizeof(key_pressed));
 }
 
+void RecoveryUI::ResetIcons() {}
+
+void RecoveryUI::InitIcons() {}
+
 void RecoveryUI::Init() {
     calibrate_swipe();
     ev_init(input_callback, NULL);

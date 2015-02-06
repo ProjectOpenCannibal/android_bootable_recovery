@@ -28,6 +28,7 @@
 #include <linux/kd.h>
 
 #include <png.h>
+#include <string.h>
 
 #include "minui.h"
 
@@ -146,6 +147,104 @@ static int open_png(const char* name, png_structp* png_ptr, png_infop* info_ptr,
     return result;
 }
 
+static int open_theme_png(const char* name, const char* themename, png_structp* png_ptr, png_infop* info_ptr,
+        png_uint_32* width, png_uint_32* height, png_byte* channels) {
+    char resPath[256] = {0};
+    unsigned char header[8] = {0};
+    int result = 0;
+
+    if(*name != '/') {
+        snprintf(resPath, sizeof(resPath), "/cache/cot/themes/%s/%s.png", themename, name);
+    }else{
+        strlcpy(resPath,name,sizeof(resPath));
+    }
+
+    FILE* fp = fopen(resPath, "rb");
+    if (fp == NULL) {
+        result = -1;
+        goto exit;
+    }
+
+    size_t bytesRead = fread(header, 1, sizeof(header), fp);
+    if (bytesRead != sizeof(header)) {
+        result = -2;
+        goto exit;
+    }
+
+    if (png_sig_cmp(header, 0, sizeof(header))) {
+        result = -3;
+        goto exit;
+    }
+
+    *png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!*png_ptr) {
+        result = -4;
+        goto exit;
+    }
+
+    *info_ptr = png_create_info_struct(*png_ptr);
+    if (!*info_ptr) {
+        result = -5;
+        goto exit;
+    }
+
+    if (setjmp(png_jmpbuf(*png_ptr))) {
+        result = -6;
+        goto exit;
+    }
+
+    png_init_io(*png_ptr, fp);
+    png_set_sig_bytes(*png_ptr, sizeof(header));
+    png_read_info(*png_ptr, *info_ptr);
+
+    int color_type, bit_depth;
+    png_get_IHDR(*png_ptr, *info_ptr, width, height, &bit_depth,
+            &color_type, NULL, NULL, NULL);
+
+    *channels = png_get_channels(*png_ptr, *info_ptr);
+
+    if (bit_depth == 8 && *channels == 3 && color_type == PNG_COLOR_TYPE_RGB) {
+        // 8-bit RGB images: great, nothing to do.
+    } else if (bit_depth <= 8 && *channels == 1 && color_type == PNG_COLOR_TYPE_GRAY) {
+        // 1-, 2-, 4-, or 8-bit gray images: expand to 8-bit gray.
+        png_set_expand_gray_1_2_4_to_8(*png_ptr);
+    } else if (bit_depth <= 8 && *channels == 1 && color_type == PNG_COLOR_TYPE_PALETTE) {
+        // paletted images: expand to 8-bit RGB.  Note that we DON'T
+        // currently expand the tRNS chunk (if any) to an alpha
+        // channel, because minui doesn't support alpha channels in
+        // general.
+        png_set_palette_to_rgb(*png_ptr);
+    } else {
+        fprintf(stderr, "minui doesn't support PNG depth %d channels %d color_type %d\n",
+                bit_depth, *channels, color_type);
+        result = -7;
+        goto exit;
+    }
+
+    if (png_get_valid(*png_ptr, *info_ptr, PNG_INFO_tRNS)) {
+        fprintf(stdout,"Has PNG_INFO_tRNS!\n");
+        png_set_tRNS_to_alpha(png_ptr);
+    }
+
+    png_read_update_info(*png_ptr, *info_ptr);
+    png_get_IHDR(*png_ptr, *info_ptr, width, height, &bit_depth,
+            &color_type, NULL, NULL, NULL);
+
+    *channels = png_get_channels(*png_ptr, *info_ptr);
+
+    return result;
+
+    exit:
+    if (result < 0) {
+        png_destroy_read_struct(png_ptr, info_ptr, NULL);
+    }
+    if (fp != NULL) {
+        fclose(fp);
+    }
+
+    return result;
+}
+
 // "display" surfaces are transformed into the framebuffer's required
 // pixel format (currently only RGBX is supported) at load time, so
 // gr_blit() can be nothing more than a memcpy() for each row.  The
@@ -250,6 +349,41 @@ int res_create_display_surface(const char* name, gr_surface* pSurface) {
     return result;
 }
 
+int res_create_theme_display_surface(const char* name, const char* themename, gr_surface* pSurface) {
+    gr_surface surface = NULL;
+    int result = 0;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_uint_32 width, height;
+    png_byte channels;
+
+    *pSurface = NULL;
+
+    result = open_theme_png(name, themename, &png_ptr, &info_ptr, &width, &height, &channels);
+    if (result < 0) return result;
+
+    surface = init_display_surface(width, height);
+    if (surface == NULL) {
+        result = -8;
+        goto exit;
+    }
+
+    unsigned char* p_row = malloc(width * 4);
+    unsigned int y;
+    for (y = 0; y < height; ++y) {
+        png_read_row(png_ptr, p_row, NULL);
+        transform_rgb_to_draw(p_row, surface->data + y * surface->row_bytes, channels, width);
+    }
+    free(p_row);
+
+    *pSurface = surface;
+
+    exit:
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    if (result < 0 && surface != NULL) free(surface);
+    return result;
+}
+
 int res_create_multi_display_surface(const char* name, int* frames, gr_surface** pSurface) {
     gr_surface* surface = NULL;
     int result = 0;
@@ -324,6 +458,80 @@ exit:
     return result;
 }
 
+int res_create_theme_multi_display_surface(const char* name, const char* themename, int* frames, gr_surface** pSurface) {
+    gr_surface* surface = NULL;
+    int result = 0;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_uint_32 width, height;
+    png_byte channels;
+    int i;
+
+    *pSurface = NULL;
+    *frames = -1;
+
+    result = open_theme_png(name, themename, &png_ptr, &info_ptr, &width, &height, &channels);
+    if (result < 0) return result;
+
+    *frames = 1;
+    png_textp text;
+    int num_text;
+    if (png_get_text(png_ptr, info_ptr, &text, &num_text)) {
+        for (i = 0; i < num_text; ++i) {
+            if (text[i].key && strcmp(text[i].key, "Frames") == 0 && text[i].text) {
+                *frames = atoi(text[i].text);
+                break;
+            }
+        }
+        printf("  found frames = %d\n", *frames);
+    }
+
+    if (height % *frames != 0) {
+        printf("bad height (%d) for frame count (%d)\n", height, *frames);
+        result = -9;
+        goto exit;
+    }
+
+    surface = malloc(*frames * sizeof(gr_surface));
+    if (surface == NULL) {
+        result = -8;
+        goto exit;
+    }
+    for (i = 0; i < *frames; ++i) {
+        surface[i] = init_display_surface(width, height / *frames);
+        if (surface[i] == NULL) {
+            result = -8;
+            goto exit;
+        }
+    }
+
+    unsigned char* p_row = malloc(width * 4);
+    unsigned int y;
+    for (y = 0; y < height; ++y) {
+        png_read_row(png_ptr, p_row, NULL);
+        int frame = y % *frames;
+        unsigned char* out_row = surface[frame]->data +
+                (y / *frames) * surface[frame]->row_bytes;
+        transform_rgb_to_draw(p_row, out_row, channels, width);
+    }
+    free(p_row);
+
+    *pSurface = (gr_surface*) surface;
+
+    exit:
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+
+    if (result < 0) {
+        if (surface) {
+            for (i = 0; i < *frames; ++i) {
+                if (surface[i]) free(surface[i]);
+            }
+            free(surface);
+        }
+    }
+    return result;
+}
+
 int res_create_alpha_surface(const char* name, gr_surface* pSurface) {
     gr_surface surface = NULL;
     int result = 0;
@@ -362,6 +570,49 @@ int res_create_alpha_surface(const char* name, gr_surface* pSurface) {
     *pSurface = surface;
 
   exit:
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    if (result < 0 && surface != NULL) free(surface);
+    return result;
+}
+
+int res_create_theme_alpha_surface(const char* name, const char* themename, gr_surface* pSurface) {
+    gr_surface surface = NULL;
+    int result = 0;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_uint_32 width, height;
+    png_byte channels;
+
+    *pSurface = NULL;
+
+    result = open_theme_png(name, themename, &png_ptr, &info_ptr, &width, &height, &channels);
+    if (result < 0) return result;
+
+    if (channels != 1) {
+        result = -7;
+        goto exit;
+    }
+
+    surface = malloc_surface(width * height);
+    if (surface == NULL) {
+        result = -8;
+        goto exit;
+    }
+    surface->width = width;
+    surface->height = height;
+    surface->row_bytes = width;
+    surface->pixel_bytes = 1;
+
+    unsigned char* p_row;
+    unsigned int y;
+    for (y = 0; y < height; ++y) {
+        p_row = surface->data + y * surface->row_bytes;
+        png_read_row(png_ptr, p_row, NULL);
+    }
+
+    *pSurface = surface;
+
+    exit:
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     if (result < 0 && surface != NULL) free(surface);
     return result;
@@ -452,6 +703,80 @@ int res_create_localized_alpha_surface(const char* name,
     }
 
 exit:
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+    if (result < 0 && surface != NULL) free(surface);
+    return result;
+}
+
+int res_create_theme_localized_alpha_surface(const char* name,
+        const char* themename,
+        const char* locale,
+        gr_surface* pSurface) {
+    gr_surface surface = NULL;
+    int result = 0;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_uint_32 width, height;
+    png_byte channels;
+
+    *pSurface = NULL;
+
+    if (locale == NULL) {
+        surface = malloc_surface(0);
+        surface->width = 0;
+        surface->height = 0;
+        surface->row_bytes = 0;
+        surface->pixel_bytes = 1;
+        goto exit;
+    }
+
+    result = open_theme_png(name, themename, &png_ptr, &info_ptr, &width, &height, &channels);
+    if (result < 0) return result;
+
+    if (channels != 1) {
+        result = -7;
+        goto exit;
+    }
+
+    unsigned char* row = malloc(width);
+    png_uint_32 y;
+    for (y = 0; y < height; ++y) {
+        png_read_row(png_ptr, row, NULL);
+        int w = (row[1] << 8) | row[0];
+        int h = (row[3] << 8) | row[2];
+        int len = row[4];
+        char* loc = (char*)row+5;
+
+        if (y+1+h >= height || matches_locale(loc, locale)) {
+            printf("  %20s: %s (%d x %d @ %d)\n", name, loc, w, h, y);
+
+            surface = malloc_surface(w*h);
+            if (surface == NULL) {
+                result = -8;
+                goto exit;
+            }
+            surface->width = w;
+            surface->height = h;
+            surface->row_bytes = w;
+            surface->pixel_bytes = 1;
+
+            int i;
+            for (i = 0; i < h; ++i, ++y) {
+                png_read_row(png_ptr, row, NULL);
+                memcpy(surface->data + i*w, row, w);
+            }
+
+            *pSurface = (gr_surface) surface;
+            break;
+        } else {
+            int i;
+            for (i = 0; i < h; ++i, ++y) {
+                png_read_row(png_ptr, row, NULL);
+            }
+        }
+    }
+
+    exit:
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     if (result < 0 && surface != NULL) free(surface);
     return result;
